@@ -51,7 +51,8 @@ class _JsonBase(Mapping):
         return str(self._data)
 
     def __repr__(self):
-        return str(self._data)
+        vals = (f"{k}={v}" for k, v in self._data.items())
+        return f"{self.__class__.__name__}({', '.join(vals)})"
 
 
 class JsonNull(_JsonBase):
