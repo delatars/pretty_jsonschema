@@ -23,18 +23,26 @@ class _JsonBase(Mapping):
     <class 'dict'>
     """
 
-    JSON_BASE = {}
+    JSON_TYPE = "base"
 
     _INIT_PROPERTIES = {}
     _CALL_PROPERTIES = {}
 
+    @property
+    def BASE(self):
+        return {"type": self.JSON_TYPE}
+
     def __init__(self):
-        self._data = {**self.JSON_BASE,
+        self._data = {**self.BASE,
                       **{prop: value for prop, value in self._INIT_PROPERTIES.items() if value is not None}}
 
     def __call__(self):
         return {**self._data,
                 **{prop: value for prop, value in self._CALL_PROPERTIES.items() if value is not None}}
+
+    def __init_subclass__(cls, JSON_TYPE, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.JSON_TYPE = JSON_TYPE
 
     def __getitem__(self, key):
         return self._data[key]
@@ -55,19 +63,16 @@ class _JsonBase(Mapping):
         return f"{self.__class__.__name__}({', '.join(vals)})"
 
 
-class JsonNull(_JsonBase):
+class JsonNull(_JsonBase, JSON_TYPE="null"):
     """https://json-schema.org/understanding-json-schema/reference/null.html"""
-    JSON_BASE = {"type": "null"}
 
 
-class JsonBool(_JsonBase):
+class JsonBool(_JsonBase, JSON_TYPE="boolean"):
     """https://json-schema.org/understanding-json-schema/reference/boolean.html"""
-    JSON_BASE = {"type": "boolean"}
 
 
-class JsonInteger(_JsonBase):
+class JsonInteger(_JsonBase, JSON_TYPE="integer"):
     """https://json-schema.org/understanding-json-schema/reference/numeric.html"""
-    JSON_BASE = {"type": "integer"}
 
     def __init__(self, enum: List = None):
         self._INIT_PROPERTIES = {"enum": enum}
@@ -78,9 +83,8 @@ class JsonInteger(_JsonBase):
         return super().__call__()
 
 
-class JsonNumber(_JsonBase):
+class JsonNumber(_JsonBase, JSON_TYPE="number"):
     """https://json-schema.org/understanding-json-schema/reference/numeric.html"""
-    JSON_BASE = {"type": "number"}
 
     def __init__(self,
                  multipleOf: int = None,
@@ -117,9 +121,8 @@ class JsonNumber(_JsonBase):
         return super().__call__()
 
 
-class JsonString(_JsonBase):
+class JsonString(_JsonBase, JSON_TYPE="string"):
     """https://json-schema.org/understanding-json-schema/reference/string.html"""
-    JSON_BASE = {"type": "string"}
 
     def __init__(self,
                  minLength: int = None,
@@ -152,9 +155,8 @@ class JsonString(_JsonBase):
         return super().__call__()
 
 
-class JsonArray(_JsonBase):
+class JsonArray(_JsonBase, JSON_TYPE="array"):
     """https://json-schema.org/understanding-json-schema/reference/array.html"""
-    JSON_BASE = {"type": "array"}
 
     def __init__(self, items: Union[_JsonBase, List[_JsonBase]] = None,
                  contains: Union[_JsonBase, List[_JsonBase]] = None,
@@ -189,9 +191,8 @@ class JsonArray(_JsonBase):
         return super().__call__()
 
 
-class JsonObject(_JsonBase):
+class JsonObject(_JsonBase, JSON_TYPE="object"):
     """https://json-schema.org/understanding-json-schema/reference/object.html"""
-    JSON_BASE = {"type": "object"}
 
     def __init__(self, properties: Dict[str, Union[_JsonBase, List[_JsonBase]]] = None,
                  patternProperties: Dict[str, Union[_JsonBase, List[_JsonBase]]] =None,
